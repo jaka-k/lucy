@@ -275,8 +275,7 @@ button.primary {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 22px 10px 12px;
+  padding: 12px 26px;
   border: 1px solid var(--cyan);
   border-radius: 3px;
   color: #061018;
@@ -285,17 +284,34 @@ button.primary {
   letter-spacing: 0.16em;
   background: linear-gradient(100deg, var(--cyan), #7ff6ec 50%, var(--cyan));
   box-shadow: 0 0 18px rgba(33, 240, 224, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.3);
-  transition: transform 0.12s, box-shadow 0.15s, filter 0.15s;
+  transition: transform 0.12s ease, box-shadow 0.15s, filter 0.15s;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 button.primary:hover { box-shadow: 0 0 28px rgba(33, 240, 224, 0.8), 0 0 10px rgba(255, 46, 136, 0.6); filter: brightness(1.08); }
-button.primary:active { transform: translateY(1px); }
-button.primary .gen-icon {
-  width: 30px;
-  height: 30px;
+button.primary:active { transform: scale(1.1); }
+
+/* standalone generate art, to the right of the button */
+.gen-art {
+  width: 62px;
+  height: 62px;
+  margin-left: 6px;
   image-rendering: pixelated;
-  border-radius: 3px;
-  filter: drop-shadow(0 0 6px rgba(255, 46, 136, 0.8));
+  border-radius: 8px;
+  filter: drop-shadow(0 0 7px rgba(255, 46, 136, 0.55));
+  transform-origin: center;
+  transition: transform 0.12s ease;
+  will-change: transform, filter;
+}
+/* press: button -> 1.1, art -> 1.2 (sibling of the active button) */
+button.primary:active ~ .gen-art { transform: scale(1.2); }
+
+/* release: one-shot color shimmer (added/removed via app.js) */
+.gen-art.shimmer { animation: gen-shimmer 0.7s ease-out; }
+@keyframes gen-shimmer {
+  0%   { filter: drop-shadow(0 0 7px rgba(255, 46, 136, 0.6)) hue-rotate(0deg) brightness(1) saturate(1); }
+  35%  { filter: drop-shadow(0 0 18px rgba(33, 240, 224, 0.95)) hue-rotate(140deg) brightness(1.5) saturate(1.6); }
+  70%  { filter: drop-shadow(0 0 16px rgba(183, 148, 255, 0.9)) hue-rotate(280deg) brightness(1.3) saturate(1.5); }
+  100% { filter: drop-shadow(0 0 7px rgba(255, 46, 136, 0.6)) hue-rotate(360deg) brightness(1) saturate(1); }
 }
 
 button.ghost {

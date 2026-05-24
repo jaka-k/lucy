@@ -24,4 +24,20 @@ function downloadResult(btn) {
   URL.revokeObjectURL(url);
 }
 
-document.addEventListener('DOMContentLoaded', lucyToggleMode);
+// On releasing the Generate button, play a one-shot color shimmer on the art.
+function lucyInitGenerateArt() {
+  const btn = document.querySelector('#gen-form button.primary');
+  const art = document.getElementById('gen-art');
+  if (!btn || !art) return;
+  btn.addEventListener('click', () => {
+    art.classList.remove('shimmer');
+    void art.offsetWidth; // force reflow so the animation can restart
+    art.classList.add('shimmer');
+  });
+  art.addEventListener('animationend', () => art.classList.remove('shimmer'));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  lucyToggleMode();
+  lucyInitGenerateArt();
+});
