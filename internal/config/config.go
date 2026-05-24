@@ -15,9 +15,14 @@ type Config struct {
 	Model  string
 }
 
-// Load reads configuration from the environment. The API key is required and
-// is read from GEMINI_API_KEY, falling back to GOOGLE_API_KEY.
+// Load reads configuration from the environment, first loading a .env file in
+// the working directory if present. The API key is required and is read from
+// GEMINI_API_KEY, falling back to GOOGLE_API_KEY.
 func Load() (Config, error) {
+	if err := loadDotEnv(".env"); err != nil {
+		return Config{}, err
+	}
+
 	key := firstNonEmpty(os.Getenv("GEMINI_API_KEY"), os.Getenv("GOOGLE_API_KEY"))
 	if key == "" {
 		return Config{}, fmt.Errorf("missing API key: set GEMINI_API_KEY (or GOOGLE_API_KEY)")

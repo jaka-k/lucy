@@ -21,6 +21,19 @@ go run ./cmd/lucy
 
 Then open http://localhost:8080.
 
+### Configuration via `.env`
+
+Instead of exporting variables, you can drop a `.env` file in the working
+directory (it's gitignored). Real environment variables take precedence over
+values in `.env`.
+
+```sh
+# .env
+GEMINI_API_KEY="your-key-here"
+PORT=8080
+GEMINI_MODEL=gemini-2.5-flash
+```
+
 ### Environment
 
 | Variable                       | Default            | Purpose                      |
