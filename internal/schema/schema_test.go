@@ -44,6 +44,62 @@ func TestBuildWrapsItemSchema(t *testing.T) {
 	}
 }
 
+func TestBuildNestedObjectAndArrayOfObject(t *testing.T) {
+	// Mirrors what the visual builder serializes for nested fields.
+	const item = `{
+		"type": "object",
+		"properties": {
+			"title": {"type": "string"},
+			"meta": {
+				"type": "object",
+				"properties": {
+					"author": {"type": "string"},
+					"year": {"type": "integer"}
+				},
+				"required": ["author"]
+			},
+			"options": {
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"text": {"type": "string"},
+						"correct": {"type": "boolean"}
+					}
+				}
+			}
+		}
+	}`
+
+	got, err := Build(item, 0)
+	if err != nil {
+		t.Fatalf("Build: %v", err)
+	}
+	if got.Type != genai.TypeArray {
+		t.Fatalf("want ARRAY root, got %q", got.Type)
+	}
+	props := got.Items.Properties
+
+	meta := props["meta"]
+	if meta == nil || meta.Type != genai.TypeObject {
+		t.Fatalf("meta should be a nested object: %+v", meta)
+	}
+	if meta.Properties["year"].Type != genai.TypeInteger {
+		t.Errorf("meta.year type lost: %+v", meta.Properties["year"])
+	}
+	if len(meta.Required) != 1 || meta.Required[0] != "author" {
+		t.Errorf("meta.required wrong: %v", meta.Required)
+	}
+
+	opts := props["options"]
+	if opts == nil || opts.Type != genai.TypeArray || opts.Items.Type != genai.TypeObject {
+		t.Fatalf("options should be an array of objects: %+v", opts)
+	}
+	if opts.Items.Properties["correct"].Type != genai.TypeBoolean {
+		t.Errorf("array-item object property lost: %+v", opts.Items.Properties["correct"])
+	}
+}
+
 func TestBuildArrayRootUsedAsIs(t *testing.T) {
 	const arr = `{"type": "array", "items": {"type": "string"}}`
 	got, err := Build(arr, 0)

@@ -42,15 +42,34 @@
         </div>
 
         <div id="builder">
-          <p class="hint">Define the fields of a single item. Lucy generates a list of them.</p>
-          <div class="row-head">
-            <span>Field name</span><span>Type</span><span>Array item</span><span>Description</span><span>Req.</span><span></span>
-          </div>
-          <div id="fields">
-            {{template "row" .}}
-          </div>
-          <button type="button" class="ghost" hx-get="/builder/row" hx-target="#fields" hx-swap="beforeend">+ Add field</button>
+          <p class="hint">Define the fields of one item &mdash; Lucy generates a list of them. Pick <code>object</code> to nest fields, or <code>array</code> to set the element type (an array of <code>object</code> nests too).</p>
+          <div id="fields" class="child-list"></div>
+          <button type="button" class="ghost" id="add-field">+ Add field</button>
         </div>
+
+        <template id="field-tpl">
+          <div class="field-node">
+            <div class="field-line">
+              <input type="text" class="f-name" placeholder="field name">
+              <select class="f-type">
+                {{range .Types}}<option value="{{.}}">{{.}}</option>{{end}}
+              </select>
+              <select class="f-itemtype hidden" title="array element type">
+                {{range .Types}}<option value="{{.}}">{{.}}</option>{{end}}
+              </select>
+              <input type="text" class="f-desc" placeholder="description (optional)">
+              <select class="f-req" title="required">
+                <option value="no">optional</option>
+                <option value="yes">required</option>
+              </select>
+              <button type="button" class="remove" title="remove field">&times;</button>
+            </div>
+            <div class="children hidden">
+              <div class="child-list"></div>
+              <button type="button" class="ghost add-child">+ nested field</button>
+            </div>
+          </div>
+        </template>
 
         <div id="raw" class="hidden">
           <p class="hint">Paste a JSON Schema. A top-level <code>"type":"array"</code> is used as-is; anything else is treated as one item and wrapped in a list.</p>

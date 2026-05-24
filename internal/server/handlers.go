@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"lucy/internal/builder"
 	"lucy/internal/convert"
 	"lucy/internal/gemini"
 	"lucy/internal/schema"
@@ -16,15 +15,14 @@ import (
 
 const generateTimeout = 90 * time.Second
 
+// fieldTypes are the types offered in the visual builder's type dropdowns.
+var fieldTypes = []string{"string", "integer", "number", "boolean", "array", "object"}
+
 type indexData struct {
 	Models       []gemini.ModelInfo
 	DefaultModel string
 	Formats      []string
 	Types        []string
-}
-
-type rowData struct {
-	Types []string
 }
 
 type resultData struct {
@@ -41,12 +39,8 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		Models:       s.models,
 		DefaultModel: s.defaultModel,
 		Formats:      convert.Formats(),
-		Types:        builder.Types,
+		Types:        fieldTypes,
 	})
-}
-
-func (s *Server) handleRow(w http.ResponseWriter, r *http.Request) {
-	s.render(w, "row", rowData{Types: builder.Types})
 }
 
 func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
@@ -112,40 +106,13 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// schemaFromForm returns the JSON Schema string, either pasted raw or built
-// from the visual builder rows.
+// schemaFromForm returns the JSON Schema string: pasted raw, or the schema the
+// visual builder serialized client-side into builder_schema.
 func (s *Server) schemaFromForm(r *http.Request) (string, error) {
 	if r.FormValue("schema_mode") == "raw" {
 		return r.FormValue("raw_schema"), nil
 	}
-	return builder.BuildSchema(parseBuilderFields(r))
-}
-
-func parseBuilderFields(r *http.Request) []builder.Field {
-	names := r.Form["field_name"]
-	types := r.Form["field_type"]
-	items := r.Form["field_item_type"]
-	descs := r.Form["field_desc"]
-	reqs := r.Form["field_required"]
-
-	fields := make([]builder.Field, 0, len(names))
-	for i := range names {
-		fields = append(fields, builder.Field{
-			Name:        names[i],
-			Type:        at(types, i),
-			ItemType:    at(items, i),
-			Description: at(descs, i),
-			Required:    at(reqs, i) == "yes",
-		})
-	}
-	return fields
-}
-
-func at(s []string, i int) string {
-	if i < len(s) {
-		return s[i]
-	}
-	return ""
+	return r.FormValue("builder_schema"), nil
 }
 
 func countItems(b []byte) int {

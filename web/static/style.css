@@ -234,34 +234,38 @@ textarea:focus, input:focus, select:focus {
 .hint { color: var(--muted); font-size: 14px; margin: 0 0 14px; font-family: var(--mono); font-size: 12.5px; }
 .hint code { background: rgba(33, 240, 224, 0.12); color: var(--cyan); padding: 1px 6px; border-radius: 3px; }
 
-/* builder rows */
-.row-head, .field-row {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1.6fr 0.7fr 38px;
-  gap: 8px;
-  align-items: center;
-}
-.row-head {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0 2px 8px;
-}
-.field-row { margin-bottom: 9px; }
-.field-row .remove {
+/* builder (recursive field tree) */
+.child-list { display: flex; flex-direction: column; gap: 8px; }
+.field-node { display: block; }
+
+.field-line { display: flex; gap: 8px; align-items: center; }
+.field-line input, .field-line select { width: auto; }
+.field-line .f-name { flex: 1.4 1 0; min-width: 110px; }
+.field-line .f-desc { flex: 1.7 1 0; min-width: 110px; }
+.field-line .f-type, .field-line .f-itemtype, .field-line .f-req { flex: 0 0 auto; min-width: 96px; }
+.field-line .remove {
+  flex: none;
+  width: 38px;
+  height: 40px;
   border: 1px solid var(--line);
   background: rgba(6, 10, 24, 0.85);
   border-radius: 3px;
-  height: 40px;
   cursor: pointer;
   color: var(--muted);
   font-size: 18px;
   line-height: 1;
   transition: all 0.15s;
 }
-.field-row .remove:hover { color: var(--error); border-color: var(--error); box-shadow: 0 0 12px rgba(255, 93, 108, 0.4); }
+.field-line .remove:hover { color: var(--error); border-color: var(--error); box-shadow: 0 0 12px rgba(255, 93, 108, 0.4); }
+
+/* nested fields, indented with a neon spine */
+.children {
+  margin: 8px 0 2px 16px;
+  padding-left: 14px;
+  border-left: 2px solid var(--line);
+}
+.children > .child-list { margin-bottom: 8px; }
+.children .add-child { margin-top: 0; font-size: 12px; padding: 6px 12px; }
 
 /* controls + CTA */
 .controls { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
@@ -406,7 +410,6 @@ button.dl:hover { background: rgba(255, 46, 136, 0.12); box-shadow: 0 0 16px rgb
 
 @media (max-width: 680px) {
   .brand-text h1 { font-size: 34px; }
-  .row-head { display: none; }
-  .field-row { grid-template-columns: 1fr 1fr; }
-  .field-row .remove { grid-column: 2; justify-self: end; width: 40px; }
+  .field-line { flex-wrap: wrap; }
+  .field-line .f-name, .field-line .f-desc { flex: 1 1 100%; }
 }

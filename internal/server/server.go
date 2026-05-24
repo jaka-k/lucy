@@ -49,7 +49,6 @@ func New(ctx context.Context, gem *gemini.Client) (*Server, error) {
 
 	s.mux.HandleFunc("GET /{$}", s.handleIndex)
 	s.mux.HandleFunc("POST /generate", s.handleGenerate)
-	s.mux.HandleFunc("GET /builder/row", s.handleRow)
 	s.mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 	return s, nil
