@@ -1,0 +1,17 @@
+{{define "row"}}
+<div class="field-row">
+  <input type="text" name="field_name" placeholder="e.g. question">
+  <select name="field_type">
+    {{range .Types}}<option value="{{.}}">{{.}}</option>{{end}}
+  </select>
+  <select name="field_item_type" title="element type when the field is an array">
+    {{range .Types}}<option value="{{.}}">{{.}}</option>{{end}}
+  </select>
+  <input type="text" name="field_desc" placeholder="description (optional)">
+  <select name="field_required" title="required">
+    <option value="no">no</option>
+    <option value="yes">yes</option>
+  </select>
+  <button type="button" class="remove" title="remove field" onclick="this.closest('.field-row').remove()">&times;</button>
+</div>
+{{end}}

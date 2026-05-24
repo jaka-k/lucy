@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lucy — structured list generator</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header>
+    <h1>Lucy</h1>
+    <p class="tagline">Prompt + JSON schema &rarr; Gemini generates a structured list, in the format you choose.</p>
+  </header>
+
+  <main>
+    <form id="gen-form" hx-post="/generate" hx-target="#result" hx-swap="innerHTML" hx-indicator="#spinner">
+      <section class="card">
+        <label class="field-label" for="prompt">Prompt</label>
+        <textarea id="prompt" name="prompt" rows="3" placeholder="Create questions for the CKA exam segment on persistent volumes."></textarea>
+      </section>
+
+      <section class="card">
+        <div class="card-head">
+          <span class="field-label">Output schema</span>
+          <div class="modes">
+            <label><input type="radio" name="schema_mode" value="builder" checked onchange="lucyToggleMode()"> Visual builder</label>
+            <label><input type="radio" name="schema_mode" value="raw" onchange="lucyToggleMode()"> Raw JSON Schema</label>
+          </div>
+        </div>
+
+        <div id="builder">
+          <p class="hint">Define the fields of a single item. Lucy generates a list of them.</p>
+          <div class="row-head">
+            <span>Field name</span><span>Type</span><span>Array item</span><span>Description</span><span>Req.</span><span></span>
+          </div>
+          <div id="fields">
+            {{template "row" .}}
+          </div>
+          <button type="button" class="ghost" hx-get="/builder/row" hx-target="#fields" hx-swap="beforeend">+ Add field</button>
+        </div>
+
+        <div id="raw" class="hidden">
+          <p class="hint">Paste a JSON Schema. A top-level <code>"type":"array"</code> is used as-is; anything else is treated as one item and wrapped in a list.</p>
+          <textarea name="raw_schema" rows="10" spellcheck="false" placeholder='{
+  "type": "object",
+  "properties": {
+    "question": { "type": "string" },
+    "answer": { "type": "string" }
+  },
+  "required": ["question", "answer"]
+}'></textarea>
+        </div>
+      </section>
+
+      <section class="card controls">
+        <div>
+          <label class="field-label" for="format">Format</label>
+          <select id="format" name="format">
+            {{range .Formats}}<option value="{{.}}">{{.}}</option>{{end}}
+          </select>
+        </div>
+        <div>
+          <label class="field-label" for="count">How many</label>
+          <input id="count" type="number" name="count" min="0" max="200" value="10">
+        </div>
+        <div class="grow">
+          <label class="field-label" for="model">Model</label>
+          <input id="model" type="text" name="model" value="{{.DefaultModel}}">
+        </div>
+        <div class="generate">
+          <button type="submit" class="primary">Generate</button>
+          <span id="spinner" class="htmx-indicator">working&hellip;</span>
+        </div>
+      </section>
+    </form>
+
+    <section id="result" class="result"></section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{{define "result"}}
+{{if .Error}}
+  <div class="error"><strong>Error:</strong> {{.Error}}</div>
+{{else}}
+  <div class="result-head">
+    <span class="badge">{{.Format}}</span>
+    <span class="muted">{{.Count}} item(s)</span>
+    <button type="button" class="dl" data-filename="{{.Filename}}" data-mime="{{.ContentType}}" onclick="downloadResult(this)">Download {{.Filename}}</button>
+  </div>
+  <pre class="output" id="output">{{.Output}}</pre>
+{{end}}
+{{end}}
