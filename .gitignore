@@ -1,0 +1,17 @@
+# Working notes (per request)
+todo.md
+
+# Secrets / local env
+.env
+.env.*
+
+# Build artifacts
+/lucy
+/bin/
+*.exe
+
+# Local Claude settings
+.claude/settings.local.json
+
+# OS junk
+.DS_Store
