@@ -3,15 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lucy — structured list generator</title>
+  <title>LUCY // structured list generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/htmx.min.js" defer></script>
   <script src="/static/app.js" defer></script>
 </head>
 <body>
+  <div class="scanlines" aria-hidden="true"></div>
   <header>
-    <h1>Lucy</h1>
-    <p class="tagline">Prompt + JSON schema &rarr; Gemini generates a structured list, in the format you choose.</p>
+    <div class="brand">
+      <div class="logo-frame">
+        <img class="logo" src="/static/lucy.png" alt="Lucy">
+      </div>
+      <div class="brand-text">
+        <h1 class="glitch" data-text="LUCY">LUCY</h1>
+        <p class="tagline">Prompt&nbsp;+&nbsp;JSON&nbsp;schema <span class="arrow">&#9656;</span> Gemini forges a structured list, in any format.</p>
+      </div>
+    </div>
   </header>
 
   <main>
@@ -72,8 +83,11 @@
           </select>
         </div>
         <div class="generate">
-          <button type="submit" class="primary">Generate</button>
-          <span id="spinner" class="htmx-indicator">working&hellip;</span>
+          <button type="submit" class="primary">
+            <img class="gen-icon" src="/static/generate.png" alt="">
+            <span>GENERATE</span>
+          </button>
+          <span id="spinner" class="htmx-indicator">// jacking in&hellip;</span>
         </div>
       </section>
     </form>
