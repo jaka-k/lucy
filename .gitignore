@@ -1,6 +1,10 @@
 # Working notes (per request)
 todo.md
 
+# Stray build outputs in package dirs
+/cmd/lucy/lucy
+/cmd/lucy/main
+
 # Secrets / local env
 .env
 .env.*
