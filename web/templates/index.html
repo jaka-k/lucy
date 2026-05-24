@@ -67,7 +67,9 @@
         </div>
         <div class="grow">
           <label class="field-label" for="model">Model</label>
-          <input id="model" type="text" name="model" value="{{.DefaultModel}}">
+          <select id="model" name="model">
+            {{range .Models}}<option value="{{.ID}}"{{if eq .ID $.DefaultModel}} selected{{end}}>{{.DisplayName}}</option>{{end}}
+          </select>
         </div>
         <div class="generate">
           <button type="submit" class="primary">Generate</button>

@@ -31,16 +31,18 @@ values in `.env`.
 # .env
 GEMINI_API_KEY="your-key-here"
 PORT=8080
-GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### Environment
 
-| Variable                       | Default            | Purpose                      |
-| ------------------------------ | ------------------ | ---------------------------- |
-| `GEMINI_API_KEY` / `GOOGLE_API_KEY` | — (required)  | Gemini API key               |
-| `PORT`                         | `8080`             | HTTP listen port             |
-| `GEMINI_MODEL`                 | `gemini-2.5-flash` | Default model (UI-overridable) |
+| Variable                            | Default       | Purpose          |
+| ----------------------------------- | ------------- | ---------------- |
+| `GEMINI_API_KEY` / `GOOGLE_API_KEY` | — (required)  | Gemini API key   |
+| `PORT`                              | `8080`        | HTTP listen port |
+
+The model is **not** configured here. At startup Lucy queries Gemini's
+ListModels endpoint and offers the `generateContent`-capable models in a UI
+dropdown (falling back to a small static list if the call fails).
 
 ## Using it
 

@@ -6,13 +6,10 @@ import (
 	"os"
 )
 
-const defaultModel = "gemini-2.5-flash"
-
 // Config holds runtime settings for the server.
 type Config struct {
 	APIKey string
 	Port   string
-	Model  string
 }
 
 // Load reads configuration from the environment, first loading a .env file in
@@ -31,7 +28,6 @@ func Load() (Config, error) {
 	return Config{
 		APIKey: key,
 		Port:   firstNonEmpty(os.Getenv("PORT"), "8080"),
-		Model:  firstNonEmpty(os.Getenv("GEMINI_MODEL"), defaultModel),
 	}, nil
 }
 

@@ -10,12 +10,14 @@ import (
 
 	"lucy/internal/builder"
 	"lucy/internal/convert"
+	"lucy/internal/gemini"
 	"lucy/internal/schema"
 )
 
 const generateTimeout = 90 * time.Second
 
 type indexData struct {
+	Models       []gemini.ModelInfo
 	DefaultModel string
 	Formats      []string
 	Types        []string
@@ -36,7 +38,8 @@ type resultData struct {
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	s.render(w, "index.html", indexData{
-		DefaultModel: s.cfg.Model,
+		Models:       s.models,
+		DefaultModel: s.defaultModel,
 		Formats:      convert.Formats(),
 		Types:        builder.Types,
 	})
@@ -81,8 +84,8 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	model := strings.TrimSpace(r.FormValue("model"))
-	if model == "" {
-		model = s.cfg.Model
+	if !s.knownModel(model) {
+		model = s.defaultModel
 	}
 
 	ctx, cancel := context.WithTimeout(r.Context(), generateTimeout)
@@ -156,6 +159,15 @@ func countItems(b []byte) int {
 func validFormat(f string) bool {
 	for _, v := range convert.Formats() {
 		if v == f {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Server) knownModel(id string) bool {
+	for _, m := range s.models {
+		if m.ID == id {
 			return true
 		}
 	}

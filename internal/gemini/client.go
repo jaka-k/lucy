@@ -4,10 +4,47 @@ package gemini
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"google.golang.org/genai"
 )
+
+// ModelInfo is a model that can be used for generation, as shown in the UI.
+type ModelInfo struct {
+	ID          string // usable model id, e.g. "gemini-2.5-flash"
+	DisplayName string
+}
+
+// ListModels returns the models that support generateContent, sorted by id.
+func (c *Client) ListModels(ctx context.Context) ([]ModelInfo, error) {
+	var out []ModelInfo
+	for m, err := range c.models.All(ctx) {
+		if err != nil {
+			return nil, fmt.Errorf("list models: %w", err)
+		}
+		if !supportsGenerate(m.SupportedActions) {
+			continue
+		}
+		id := strings.TrimPrefix(m.Name, "models/")
+		label := m.DisplayName
+		if label == "" {
+			label = id
+		}
+		out = append(out, ModelInfo{ID: id, DisplayName: label})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return out, nil
+}
+
+func supportsGenerate(actions []string) bool {
+	for _, a := range actions {
+		if a == "generateContent" {
+			return true
+		}
+	}
+	return false
+}
 
 // Client generates structured JSON output from Gemini.
 type Client struct {

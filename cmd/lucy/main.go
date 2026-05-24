@@ -36,7 +36,7 @@ func run() error {
 		return err
 	}
 
-	srv, err := server.New(cfg, gem)
+	srv, err := server.New(ctx, gem)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func run() error {
 	}
 
 	go func() {
-		log.Printf("lucy listening on http://localhost:%s (model %s)", cfg.Port, cfg.Model)
+		log.Printf("lucy listening on http://localhost:%s", cfg.Port)
 		if err := httpSrv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("server error: %v", err)
 		}
