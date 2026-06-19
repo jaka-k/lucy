@@ -39,3 +39,8 @@ func (s *Store) Disconnect(ctx context.Context) error {
 func (s *Store) database() *mongo.Database {
 	return s.client.Database(s.db)
 }
+
+// DropDatabase drops the entire database. Intended for test cleanup only.
+func (s *Store) DropDatabase(ctx context.Context) error {
+	return s.database().Drop(ctx)
+}

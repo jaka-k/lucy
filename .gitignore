@@ -7,7 +7,8 @@ todo.md
 
 # Secrets / local env
 .env
-.env.*
+.env.local
+.env.*.local
 
 # Build artifacts
 /lucy
