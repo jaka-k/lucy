@@ -102,13 +102,30 @@ function lucyInitBuilder() {
   fields.appendChild(makeFieldNode()); // one starter field
 }
 
-// Inject the builder's serialized schema into the htmx request at send time.
+// Inject builder schema and mongo fields into the htmx request at send time.
 function lucyInitForm() {
   const form = document.getElementById('gen-form');
   if (!form) return;
   form.addEventListener('htmx:configRequest', (e) => {
     if (lucyMode() === 'builder') {
       e.detail.parameters['builder_schema'] = serializeBuilder();
+    }
+
+    const sel = document.getElementById('collection-select');
+    const newName = document.getElementById('new-collection-name');
+    const tag = document.getElementById('tag');
+    const autoCommit = document.getElementById('auto-commit');
+
+    if (sel && sel.value && sel.value !== '__new__') {
+      e.detail.parameters['collection_id'] = sel.value;
+    } else if (sel && sel.value === '__new__' && newName && newName.value.trim()) {
+      e.detail.parameters['new_collection'] = newName.value.trim();
+    }
+    if (tag && tag.value.trim()) {
+      e.detail.parameters['tag'] = tag.value.trim();
+    }
+    if (autoCommit) {
+      e.detail.parameters['auto_commit'] = autoCommit.checked ? '1' : '0';
     }
   });
 }
@@ -139,6 +156,73 @@ function lucyInitGenerateArt() {
     art.classList.add('shimmer');
   });
   art.addEventListener('animationend', () => art.classList.remove('shimmer'));
+}
+
+// ---- MongoDB collection picker ----
+
+function lucyCollectionChanged(sel) {
+  const newWrap = document.getElementById('new-collection-wrap');
+  if (!newWrap) return;
+  newWrap.classList.toggle('hidden', sel.value !== '__new__');
+  if (sel.value && sel.value !== '__new__') {
+    lucyLoadSchema(sel.value);
+  }
+}
+
+async function lucyLoadSchema(collectionId) {
+  try {
+    const res = await fetch(`/collections/${collectionId}/schema`);
+    if (res.status === 204) return;
+    if (!res.ok) return;
+    const schema = await res.json();
+    lucyDeserializeBuilder(schema);
+  } catch (_) {}
+}
+
+// Rebuild the visual builder from a stored item schema.
+function lucyDeserializeBuilder(schema) {
+  const fields = document.getElementById('fields');
+  if (!fields || schema.type !== 'object' || !schema.properties) return;
+  fields.innerHTML = '';
+  for (const [name, propSchema] of Object.entries(schema.properties)) {
+    const required = Array.isArray(schema.required) && schema.required.includes(name);
+    fields.appendChild(makeFieldNodeFromSchema(name, propSchema, required));
+  }
+  // Switch to builder mode
+  const builderRadio = document.querySelector('input[name="schema_mode"][value="builder"]');
+  if (builderRadio) { builderRadio.checked = true; lucyToggleMode(); }
+}
+
+function makeFieldNodeFromSchema(name, schema, required) {
+  const node = makeFieldNode();
+  const line = node.querySelector(':scope > .field-line');
+  line.querySelector('.f-name').value = name;
+  if (schema.description) line.querySelector('.f-desc').value = schema.description;
+  line.querySelector('.f-req').value = required ? 'yes' : 'no';
+
+  const typeEl = line.querySelector('.f-type');
+  const itemTypeEl = line.querySelector('.f-itemtype');
+  typeEl.value = schema.type || 'string';
+  typeEl.dispatchEvent(new Event('change'));
+
+  if (schema.type === 'array' && schema.items) {
+    itemTypeEl.value = schema.items.type || 'string';
+    itemTypeEl.dispatchEvent(new Event('change'));
+    if (schema.items.type === 'object' && schema.items.properties) {
+      const childList = node.querySelector(':scope > .children > .child-list');
+      for (const [cName, cSchema] of Object.entries(schema.items.properties)) {
+        const cRequired = Array.isArray(schema.items.required) && schema.items.required.includes(cName);
+        childList.appendChild(makeFieldNodeFromSchema(cName, cSchema, cRequired));
+      }
+    }
+  } else if (schema.type === 'object' && schema.properties) {
+    const childList = node.querySelector(':scope > .children > .child-list');
+    for (const [cName, cSchema] of Object.entries(schema.properties)) {
+      const cRequired = Array.isArray(schema.required) && schema.required.includes(cName);
+      childList.appendChild(makeFieldNodeFromSchema(cName, cSchema, cRequired));
+    }
+  }
+  return node;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

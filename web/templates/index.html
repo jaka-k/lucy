@@ -84,6 +84,36 @@
         </div>
       </section>
 
+      <section class="card mongo-section">
+        <div class="card-head">
+          <span class="field-label">MongoDB</span>
+        </div>
+        <div class="mongo-row">
+          <div>
+            <label class="field-label" for="collection-select">Collection</label>
+            <select id="collection-select" onchange="lucyCollectionChanged(this)">
+              <option value="">-- none --</option>
+              {{range .Collections}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
+              <option value="__new__">+ new collection&hellip;</option>
+            </select>
+          </div>
+          <div id="new-collection-wrap" class="hidden">
+            <label class="field-label" for="new-collection-name">New collection name</label>
+            <input id="new-collection-name" type="text" placeholder="e.g. cka_exam">
+          </div>
+          <div>
+            <label class="field-label" for="tag">Tag</label>
+            <input id="tag" type="text" placeholder="e.g. pvc">
+          </div>
+          <div class="autocommit-wrap">
+            <label class="checkbox-label">
+              <input id="auto-commit" type="checkbox">
+              auto-commit
+            </label>
+          </div>
+        </div>
+      </section>
+
       <section class="card controls">
         <div>
           <label class="field-label" for="format">Format</label>

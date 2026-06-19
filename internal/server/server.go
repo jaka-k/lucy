@@ -52,6 +52,8 @@ func New(ctx context.Context, gem *gemini.Client, st *store.Store) (*Server, err
 
 	s.mux.HandleFunc("GET /{$}", s.handleIndex)
 	s.mux.HandleFunc("POST /generate", s.handleGenerate)
+	s.mux.HandleFunc("GET /collections", s.handleListCollections)
+	s.mux.HandleFunc("GET /collections/{id}/schema", s.handleGetSchema)
 	s.mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))
 
 	return s, nil

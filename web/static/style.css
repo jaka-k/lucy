@@ -408,6 +408,26 @@ button.dl:hover { background: rgba(255, 46, 136, 0.12); box-shadow: 0 0 16px rgb
 }
 .error strong { color: var(--error); }
 
+/* MongoDB section */
+.mongo-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
+.mongo-row > div { min-width: 160px; }
+.autocommit-wrap { display: flex; align-items: center; padding-bottom: 2px; }
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  cursor: pointer;
+}
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--pink);
+  cursor: pointer;
+}
+
 @media (max-width: 680px) {
   .brand-text h1 { font-size: 34px; }
   .field-line { flex-wrap: wrap; }

@@ -11,6 +11,9 @@ import (
 	"lucy/internal/convert"
 	"lucy/internal/gemini"
 	"lucy/internal/schema"
+	"lucy/internal/store"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const generateTimeout = 90 * time.Second
@@ -23,6 +26,7 @@ type indexData struct {
 	DefaultModel string
 	Formats      []string
 	Types        []string
+	Collections  []store.Collection
 }
 
 type resultData struct {
@@ -35,12 +39,44 @@ type resultData struct {
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
+	collections, _ := s.store.ListCollections(r.Context())
 	s.render(w, "index.html", indexData{
 		Models:       s.models,
 		DefaultModel: s.defaultModel,
 		Formats:      convert.Formats(),
 		Types:        fieldTypes,
+		Collections:  collections,
 	})
+}
+
+func (s *Server) handleListCollections(w http.ResponseWriter, r *http.Request) {
+	collections, err := s.store.ListCollections(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(collections)
+}
+
+func (s *Server) handleGetSchema(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := bsonIDFromHex(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+	raw, err := s.store.GetSchema(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if raw == nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(raw)
 }
 
 func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
@@ -139,6 +175,10 @@ func (s *Server) knownModel(id string) bool {
 		}
 	}
 	return false
+}
+
+func bsonIDFromHex(s string) (bson.ObjectID, error) {
+	return bson.ObjectIDFromHex(s)
 }
 
 func (s *Server) render(w http.ResponseWriter, name string, data any) {
