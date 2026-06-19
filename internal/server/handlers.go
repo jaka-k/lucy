@@ -40,6 +40,8 @@ type resultData struct {
 	CollectionID   string
 	CollectionName string
 	Tag            string
+	Inserted       int
+	AutoCommit     bool
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -140,10 +142,20 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 	rctx := r.Context()
 	collectionID, collectionName := s.resolveCollection(rctx, r)
 	tag := strings.TrimSpace(r.FormValue("tag"))
+	autoCommit := r.FormValue("auto_commit") == "1"
 
+	inserted := 0
 	if collectionID != (bson.ObjectID{}) {
 		if err := s.store.UpsertSchema(rctx, collectionID, json.RawMessage(schemaStr)); err != nil {
 			log.Printf("upsert schema: %v", err)
+		}
+		if autoCommit {
+			n, err := s.store.InsertItems(rctx, collectionName, jsonBytes, tag)
+			if err != nil {
+				log.Printf("insert items: %v", err)
+			} else {
+				inserted = n
+			}
 		}
 	}
 
@@ -156,6 +168,8 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		CollectionID:   collectionID.Hex(),
 		CollectionName: collectionName,
 		Tag:            tag,
+		Inserted:       inserted,
+		AutoCommit:     autoCommit,
 	})
 }
 

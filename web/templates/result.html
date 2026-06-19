@@ -5,6 +5,17 @@
   <div class="result-head">
     <span class="badge">{{.Format}}</span>
     <span class="muted">{{.Count}} item(s)</span>
+    {{if .AutoCommit}}
+      <span class="badge-mongo">&#x25B6; {{.Inserted}} committed &rarr; {{.CollectionName}}{{if .Tag}} / {{.Tag}}{{end}}</span>
+    {{else if .CollectionName}}
+      <span class="badge-mongo pending" id="pending-items"
+            data-collection-id="{{.CollectionID}}"
+            data-collection-name="{{.CollectionName}}"
+            data-tag="{{.Tag}}">
+        &#x25C7; {{.Count}} pending &rarr; {{.CollectionName}}{{if .Tag}} / {{.Tag}}{{end}}
+        <button type="button" class="ghost-sm" onclick="lucyOpenCommitModal()">Commit&hellip;</button>
+      </span>
+    {{end}}
     <button type="button" class="dl" data-filename="{{.Filename}}" data-mime="{{.ContentType}}" onclick="downloadResult(this)">Download {{.Filename}}</button>
   </div>
   <pre class="output" id="output">{{.Output}}</pre>

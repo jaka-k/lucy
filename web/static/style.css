@@ -376,6 +376,33 @@ button.dl:hover { background: rgba(255, 46, 136, 0.12); box-shadow: 0 0 16px rgb
   box-shadow: 0 0 14px rgba(255, 46, 136, 0.5);
 }
 .muted { color: var(--muted); font-family: var(--mono); font-size: 13px; }
+.badge-mongo {
+  font-family: var(--mono);
+  background: linear-gradient(100deg, #1a7f5a, #21c48a);
+  color: #051a10;
+  border-radius: 3px;
+  padding: 3px 10px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  box-shadow: 0 0 12px rgba(33, 196, 138, 0.5);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.badge-mongo.pending { background: linear-gradient(100deg, #4a3a00, #c8a400); color: #1a1200; box-shadow: 0 0 12px rgba(200, 164, 0, 0.5); }
+button.ghost-sm {
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  padding: 2px 8px;
+  color: inherit;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  opacity: 0.85;
+}
+button.ghost-sm:hover { opacity: 1; }
 
 .output {
   background: rgba(4, 7, 18, 0.92);
