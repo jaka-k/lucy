@@ -208,6 +208,44 @@ func (s *Server) knownModel(id string) bool {
 	return false
 }
 
+func (s *Server) handleCommit(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		CollectionID   string            `json:"collection_id"`
+		CollectionName string            `json:"collection_name"`
+		Tag            string            `json:"tag"`
+		Items          []json.RawMessage `json:"items"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	if body.CollectionName == "" {
+		http.Error(w, "collection_name required", http.StatusBadRequest)
+		return
+	}
+	if len(body.Items) == 0 {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]int{"inserted": 0})
+		return
+	}
+
+	// Re-marshal the selected items as an array for InsertItems.
+	itemsJSON, err := json.Marshal(body.Items)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	n, err := s.store.InsertItems(r.Context(), body.CollectionName, itemsJSON, body.Tag)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]int{"inserted": n})
+}
+
 func bsonIDFromHex(s string) (bson.ObjectID, error) {
 	return bson.ObjectIDFromHex(s)
 }

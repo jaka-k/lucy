@@ -225,6 +225,88 @@ function makeFieldNodeFromSchema(name, schema, required) {
   return node;
 }
 
+// ---- preview / selective commit modal ----
+
+function lucyOpenCommitModal() {
+  const pending = document.getElementById('pending-items');
+  const pre = document.getElementById('output');
+  if (!pending || !pre) return;
+
+  let items;
+  try { items = JSON.parse(pre.textContent); } catch (_) { return; }
+  if (!Array.isArray(items)) return;
+
+  const modal = document.getElementById('commit-modal');
+  const hint = document.getElementById('modal-hint');
+  const list = document.getElementById('modal-item-list');
+  const status = document.getElementById('modal-status');
+
+  const collectionName = pending.dataset.collectionName;
+  const tag = pending.dataset.tag;
+  hint.textContent = `Select items to commit to "${collectionName}"${tag ? ' / ' + tag : ''}.`;
+  status.textContent = '';
+  list.innerHTML = '';
+
+  items.forEach((item, i) => {
+    const label = document.createElement('label');
+    label.className = 'modal-item';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.dataset.index = String(i);
+    const pre = document.createElement('pre');
+    pre.className = 'modal-item-pre';
+    pre.textContent = JSON.stringify(item, null, 2);
+    label.appendChild(cb);
+    label.appendChild(pre);
+    list.appendChild(label);
+  });
+
+  modal.classList.remove('hidden');
+}
+
+function lucyCloseCommitModal() {
+  const modal = document.getElementById('commit-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function lucyCommit() {
+  const pending = document.getElementById('pending-items');
+  const pre = document.getElementById('output');
+  const status = document.getElementById('modal-status');
+  if (!pending || !pre) return;
+
+  let items;
+  try { items = JSON.parse(pre.textContent); } catch (_) { return; }
+  if (!Array.isArray(items)) return;
+
+  const checked = document.querySelectorAll('#modal-item-list input[type=checkbox]:checked');
+  const selected = Array.from(checked).map(cb => items[parseInt(cb.dataset.index)]);
+
+  status.textContent = '// committing…';
+  try {
+    const res = await fetch('/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        collection_id: pending.dataset.collectionId,
+        collection_name: pending.dataset.collectionName,
+        tag: pending.dataset.tag,
+        items: selected,
+      }),
+    });
+    if (!res.ok) { status.textContent = 'Error: ' + (await res.text()); return; }
+    const data = await res.json();
+    status.textContent = `// ${data.inserted} inserted`;
+    // update the pending badge to reflect commit
+    pending.innerHTML = `&#x25B6; ${data.inserted} committed &rarr; ${pending.dataset.collectionName}${pending.dataset.tag ? ' / ' + pending.dataset.tag : ''}`;
+    pending.classList.remove('pending');
+    setTimeout(lucyCloseCommitModal, 900);
+  } catch (e) {
+    status.textContent = 'Error: ' + e.message;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   lucyToggleMode();
   lucyInitBuilder();
