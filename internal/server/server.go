@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"lucy/internal/gemini"
+	"lucy/internal/store"
 	"lucy/web"
 )
 
@@ -18,6 +19,7 @@ const listModelsTimeout = 15 * time.Second
 // Server holds the dependencies shared across HTTP handlers.
 type Server struct {
 	gem          *gemini.Client
+	store        *store.Store
 	tmpl         *template.Template
 	mux          *http.ServeMux
 	models       []gemini.ModelInfo
@@ -26,7 +28,7 @@ type Server struct {
 
 // New parses the embedded templates, fetches the available models, wires
 // routes, and returns a ready Server.
-func New(ctx context.Context, gem *gemini.Client) (*Server, error) {
+func New(ctx context.Context, gem *gemini.Client, st *store.Store) (*Server, error) {
 	tmpl, err := template.ParseFS(web.Files, "templates/*.html")
 	if err != nil {
 		return nil, err
@@ -36,6 +38,7 @@ func New(ctx context.Context, gem *gemini.Client) (*Server, error) {
 
 	s := &Server{
 		gem:          gem,
+		store:        st,
 		tmpl:         tmpl,
 		mux:          http.NewServeMux(),
 		models:       models,

@@ -14,6 +14,7 @@ import (
 	"lucy/internal/config"
 	"lucy/internal/gemini"
 	"lucy/internal/server"
+	"lucy/internal/store"
 )
 
 func main() {
@@ -31,12 +32,24 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	st, err := store.Connect(ctx, cfg.MongoURI, cfg.MongoDB)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		dctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := st.Disconnect(dctx); err != nil {
+			log.Printf("mongo disconnect: %v", err)
+		}
+	}()
+
 	gem, err := gemini.New(ctx, cfg.APIKey)
 	if err != nil {
 		return err
 	}
 
-	srv, err := server.New(ctx, gem)
+	srv, err := server.New(ctx, gem, st)
 	if err != nil {
 		return err
 	}
