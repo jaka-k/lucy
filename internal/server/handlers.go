@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,12 +31,15 @@ type indexData struct {
 }
 
 type resultData struct {
-	Error       string
-	Format      string
-	Count       int
-	Filename    string
-	ContentType string
-	Output      string
+	Error          string
+	Format         string
+	Count          int
+	Filename       string
+	ContentType    string
+	Output         string
+	CollectionID   string
+	CollectionName string
+	Tag            string
 }
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -133,12 +137,25 @@ func (s *Server) handleGenerate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rctx := r.Context()
+	collectionID, collectionName := s.resolveCollection(rctx, r)
+	tag := strings.TrimSpace(r.FormValue("tag"))
+
+	if collectionID != (bson.ObjectID{}) {
+		if err := s.store.UpsertSchema(rctx, collectionID, json.RawMessage(schemaStr)); err != nil {
+			log.Printf("upsert schema: %v", err)
+		}
+	}
+
 	s.renderResult(w, resultData{
-		Format:      format,
-		Count:       countItems(jsonBytes),
-		Filename:    "lucy-output." + res.Ext,
-		ContentType: res.ContentType,
-		Output:      string(res.Data),
+		Format:         format,
+		Count:          countItems(jsonBytes),
+		Filename:       "lucy-output." + res.Ext,
+		ContentType:    res.ContentType,
+		Output:         string(res.Data),
+		CollectionID:   collectionID.Hex(),
+		CollectionName: collectionName,
+		Tag:            tag,
 	})
 }
 
@@ -179,6 +196,39 @@ func (s *Server) knownModel(id string) bool {
 
 func bsonIDFromHex(s string) (bson.ObjectID, error) {
 	return bson.ObjectIDFromHex(s)
+}
+
+// resolveCollection returns the ObjectID and name of the target collection
+// (existing or newly created). Returns zero-value ID if no collection was
+// selected or if creation fails.
+func (s *Server) resolveCollection(ctx context.Context, r *http.Request) (bson.ObjectID, string) {
+	if idStr := strings.TrimSpace(r.FormValue("collection_id")); idStr != "" {
+		id, err := bson.ObjectIDFromHex(idStr)
+		if err != nil {
+			return bson.ObjectID{}, ""
+		}
+		collections, err := s.store.ListCollections(ctx)
+		if err != nil {
+			return bson.ObjectID{}, ""
+		}
+		for _, c := range collections {
+			if c.ID == id {
+				return id, c.Name
+			}
+		}
+		return bson.ObjectID{}, ""
+	}
+
+	if name := strings.TrimSpace(r.FormValue("new_collection")); name != "" {
+		id, err := s.store.EnsureCollection(ctx, name)
+		if err != nil {
+			log.Printf("ensure collection %q: %v", name, err)
+			return bson.ObjectID{}, ""
+		}
+		return id, name
+	}
+
+	return bson.ObjectID{}, ""
 }
 
 func (s *Server) render(w http.ResponseWriter, name string, data any) {
