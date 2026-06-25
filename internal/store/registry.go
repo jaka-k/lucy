@@ -66,6 +66,22 @@ func (s *Store) ListCollections(ctx context.Context) ([]Collection, error) {
 	return out, nil
 }
 
+// GetCollection looks up a collection registry row by ObjectID.
+// Returns nil, nil when no document matches.
+func (s *Store) GetCollection(ctx context.Context, id bson.ObjectID) (*Collection, error) {
+	var c Collection
+	err := s.database().Collection("collections").
+		FindOne(ctx, bson.D{{Key: "_id", Value: id}}).
+		Decode(&c)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
 // EnsureCollection returns the ObjectID for the named collection, creating it
 // if it doesn't exist yet.
 func (s *Store) EnsureCollection(ctx context.Context, name string) (bson.ObjectID, error) {

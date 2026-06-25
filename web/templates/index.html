@@ -93,7 +93,7 @@
             <label class="field-label" for="collection-select">Collection</label>
             <select id="collection-select" onchange="lucyCollectionChanged(this)">
               <option value="">-- none --</option>
-              {{range .Collections}}<option value="{{.ID}}">{{.Name}}</option>{{end}}
+              {{range .Collections}}<option value="{{.ID.Hex}}">{{.Name}}</option>{{end}}
               <option value="__new__">+ new collection&hellip;</option>
             </select>
           </div>
@@ -140,6 +140,19 @@
     </form>
 
     <section id="result" class="result"></section>
+
+    <section id="collection-view" class="card collection-view hidden">
+      <div class="card-head">
+        <span class="field-label">Collection items <span id="cv-name" class="muted"></span></span>
+        <div class="action-bar">
+          <button type="button" class="ghost" id="cv-edit" disabled onclick="lucyOpenEditModal()">EDIT</button>
+          <button type="button" class="ghost danger" id="cv-delete" disabled onclick="lucyOpenDeleteModal()">DELETE</button>
+          <button type="button" class="ghost" id="cv-refresh" onclick="lucyReloadItems()">REFRESH</button>
+        </div>
+      </div>
+      <p class="hint" id="cv-hint">Pick a collection above to browse its documents.</p>
+      <div id="cv-list" class="items-list"></div>
+    </section>
   </main>
 
   <div id="commit-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Commit items">
@@ -148,12 +161,44 @@
         <span class="field-label">Commit to MongoDB</span>
         <button type="button" class="modal-close" onclick="lucyCloseCommitModal()" aria-label="Close">&times;</button>
       </div>
-      <p class="hint" id="modal-hint"></p>
+      <p class="hint" id="modal-hint">If this is not working restart the server.</p>
       <div id="modal-item-list" class="modal-item-list"></div>
       <div class="modal-foot">
         <button type="button" class="primary" onclick="lucyCommit()"><span>COMMIT</span></button>
         <button type="button" class="ghost" onclick="lucyCloseCommitModal()">Cancel</button>
         <span id="modal-status" class="muted"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirm-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Confirm delete">
+    <div class="modal modal-sm">
+      <div class="modal-head">
+        <span class="field-label">Delete item</span>
+        <button type="button" class="modal-close" onclick="lucyCloseConfirmModal()" aria-label="Close">&times;</button>
+      </div>
+      <p class="hint">Are you sure? This permanently removes the selected document.</p>
+      <pre id="confirm-preview" class="modal-item-pre"></pre>
+      <div class="modal-foot">
+        <button type="button" class="primary danger" onclick="lucyConfirmDelete()"><span>DELETE</span></button>
+        <button type="button" class="ghost" onclick="lucyCloseConfirmModal()">Cancel</button>
+        <span id="confirm-status" class="muted"></span>
+      </div>
+    </div>
+  </div>
+
+  <div id="edit-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-label="Edit item">
+    <div class="modal">
+      <div class="modal-head">
+        <span class="field-label">Edit item</span>
+        <button type="button" class="modal-close" onclick="lucyCloseEditModal()" aria-label="Close">&times;</button>
+      </div>
+      <p class="hint"><code>_id</code> and <code>created_at</code> are preserved automatically; edit the rest as JSON.</p>
+      <textarea id="edit-json" rows="14" spellcheck="false" class="edit-json"></textarea>
+      <div class="modal-foot">
+        <button type="button" class="primary" onclick="lucyConfirmEdit()"><span>SAVE</span></button>
+        <button type="button" class="ghost" onclick="lucyCloseEditModal()">Cancel</button>
+        <span id="edit-status" class="muted"></span>
       </div>
     </div>
   </div>

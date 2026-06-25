@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 	"lucy/internal/store"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 const generateTimeout = 90 * time.Second
@@ -248,6 +250,105 @@ func (s *Server) handleCommit(w http.ResponseWriter, r *http.Request) {
 
 func bsonIDFromHex(s string) (bson.ObjectID, error) {
 	return bson.ObjectIDFromHex(s)
+}
+
+// resolveCollectionName resolves the path's {id} to a registered collection
+// name and writes the appropriate HTTP error if it can't.
+func (s *Server) resolveCollectionName(w http.ResponseWriter, r *http.Request) (string, bool) {
+	id, err := bsonIDFromHex(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid collection id", http.StatusBadRequest)
+		return "", false
+	}
+	c, err := s.store.GetCollection(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return "", false
+	}
+	if c == nil {
+		http.Error(w, "collection not found", http.StatusNotFound)
+		return "", false
+	}
+	return c.Name, true
+}
+
+func (s *Server) handleListItems(w http.ResponseWriter, r *http.Request) {
+	name, ok := s.resolveCollectionName(w, r)
+	if !ok {
+		return
+	}
+
+	limit := int64(0)
+	if v, err := strconv.ParseInt(strings.TrimSpace(r.URL.Query().Get("limit")), 10, 64); err == nil {
+		limit = v
+	}
+
+	items, err := s.store.ListItems(r.Context(), name, limit)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Convert _id (bson.ObjectID) to hex so the client can address rows.
+	out := make([]map[string]any, 0, len(items))
+	for _, doc := range items {
+		if oid, ok := doc["_id"].(bson.ObjectID); ok {
+			doc["_id"] = oid.Hex()
+		}
+		out = append(out, doc)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(out)
+}
+
+func (s *Server) handleDeleteItem(w http.ResponseWriter, r *http.Request) {
+	name, ok := s.resolveCollectionName(w, r)
+	if !ok {
+		return
+	}
+	itemID, err := bsonIDFromHex(r.PathValue("itemId"))
+	if err != nil {
+		http.Error(w, "invalid item id", http.StatusBadRequest)
+		return
+	}
+	if err := s.store.DeleteItem(r.Context(), name, itemID); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, "item not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (s *Server) handleUpdateItem(w http.ResponseWriter, r *http.Request) {
+	name, ok := s.resolveCollectionName(w, r)
+	if !ok {
+		return
+	}
+	itemID, err := bsonIDFromHex(r.PathValue("itemId"))
+	if err != nil {
+		http.Error(w, "invalid item id", http.StatusBadRequest)
+		return
+	}
+
+	var fields map[string]any
+	if err := json.NewDecoder(r.Body).Decode(&fields); err != nil {
+		http.Error(w, "invalid JSON: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := s.store.UpdateItem(r.Context(), name, itemID, fields); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			http.Error(w, "item not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // resolveCollection returns the ObjectID and name of the target collection
