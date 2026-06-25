@@ -28,6 +28,17 @@ go run ./cmd/lucy
 
 Then open http://localhost:8077.
 
+### Hot reload (dev)
+
+A [`air`](https://github.com/air-verse/air) config is included; it rebuilds on
+changes to Go sources, templates, and static assets (the last two are embedded
+via `go:embed`, so rebuild is required).
+
+```sh
+go install github.com/air-verse/air@latest   # one-time
+air                                          # in the project root
+```
+
 ### Configuration via `.env`
 
 Drop a `.env` file in the working directory (it's gitignored). Real environment

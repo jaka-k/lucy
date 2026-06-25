@@ -1,0 +1,26 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/lucy ./cmd/lucy"
+  bin = "./tmp/lucy"
+  include_ext = ["go", "html", "css", "js"]
+  include_dir = ["cmd", "internal", "web"]
+  exclude_dir = ["tmp", "bin", ".idea", ".git"]
+  exclude_regex = ["_test\\.go$"]
+  delay = 200
+  stop_on_error = true
+  kill_delay = "500ms"
+  send_interrupt = true
+
+[log]
+  time = true
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"
+
+[misc]
+  clean_on_exit = true
