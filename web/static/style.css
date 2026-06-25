@@ -344,7 +344,7 @@ button.dl {
 }
 button.dl:hover { background: rgba(255, 46, 136, 0.12); box-shadow: 0 0 16px rgba(255, 46, 136, 0.45); }
 
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 /* spinner */
 .htmx-indicator {
